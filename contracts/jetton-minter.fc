@@ -32,8 +32,6 @@ const int error::unauthorized_mint_request = 73;
 () mint_tokens(slice to_address, cell jetton_wallet_code, int amount, cell master_msg) impure {
   cell state_init = calculate_jetton_wallet_state_init(to_address, my_address(), jetton_wallet_code);
   slice to_wallet_address = calculate_jetton_wallet_address(state_init);
-  ~strdump("mint_tokens to_wallet_address");
-  ~dump(to_wallet_address);
   var msg = begin_cell()
     .store_uint(0x18, 6) ;; bounceable
     .store_slice(to_wallet_address)
@@ -65,11 +63,8 @@ const int error::unauthorized_mint_request = 73;
         throw_unless(error::unauthorized_mint_request, equal_slice_bits(sender_address, admin_address));
         slice to_address = in_msg_body~load_msg_addr();
         int jetton_amount = in_msg_body~load_coins();
-        ~strdump("op:mint jetton_amount");
         int forward_ton_amount = in_msg_body~load_coins();
         int total_ton_amount = in_msg_body~load_coins();
-        ~dump(total_ton_amount);
-
         throw_unless(101, total_supply + jetton_amount <= const::max_prev_supply);
         throw_unless(75, total_ton_amount > forward_ton_amount);
         cell mint_request = begin_cell()

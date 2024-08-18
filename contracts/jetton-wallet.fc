@@ -85,9 +85,9 @@ int gas_consumption() asm "15000000 PUSHINT"; ;; 0.015 TON
     .store_coins(forward_ton_amount)
     .store_slice(either_forward_payload)
     .end_cell();
-
   msg = msg.store_ref(msg_body);
   int fwd_count = forward_ton_amount ? 2 : 1;
+  
   throw_unless(709, msg_value >
                      forward_ton_amount +
                      ;; 3 messages: wal1->wal2,  wal2->owner, wal2->response
@@ -125,7 +125,6 @@ int gas_consumption() asm "15000000 PUSHINT"; ;; 0.015 TON
       equal_slices(calculate_user_jetton_wallet_address(from_address, jetton_master_address, jetton_wallet_code), sender_address)
   );
   int forward_ton_amount = in_msg_body~load_coins();
-
   int ton_balance_before_msg = my_ton_balance - msg_value;
   int storage_fee = min_tons_for_storage() - min(ton_balance_before_msg, min_tons_for_storage());
   msg_value -= (storage_fee + gas_consumption());
