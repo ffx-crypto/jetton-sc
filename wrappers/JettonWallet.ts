@@ -39,8 +39,8 @@ export class JettonWallet implements Contract {
         forwardPayload: Cell,
     ) {
         return beginCell()
-            .storeUint(0xf8a7ea5, 32)
-            .storeUint(0, 64) // op, queryId
+            .storeUint(0xf8a7ea5, 32) // op
+            .storeUint(0, 64) // queryId
             .storeCoins(jetton_amount)
             .storeAddress(to)
             .storeAddress(responseAddress)
