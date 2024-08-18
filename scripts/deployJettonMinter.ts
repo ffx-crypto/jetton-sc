@@ -1,13 +1,25 @@
 import { toNano } from '@ton/core';
 import { JettonMinter } from '../wrappers/JettonMinter';
 import { compile, NetworkProvider } from '@ton/blueprint';
+import * as dotenv from 'dotenv';
+import { jettonContentToCell } from '../wrappers/JettonMinter';
+dotenv.config();
 
 export async function run(provider: NetworkProvider) {
-    const jettonMinter = provider.open(JettonMinter.createFromConfig({}, await compile('JettonMinter')));
+    const contentUrl = process.env.CONTENT_URL!;
+    const wallet_code = await compile('JettonWallet');
+    const minter_code = await compile('JettonMinter');
+    const minter_content = jettonContentToCell({type:1,uri:contentUrl});
 
-    await jettonMinter.sendDeploy(provider.sender(), toNano('0.05'));
+    const masterContract = provider.open(JettonMinter.createFromConfig({
+        admin: provider.sender().address!,
+        content: minter_content,
+        jwallet_code: wallet_code
+    }, minter_code));
 
-    await provider.waitForDeploy(jettonMinter.address);
+    await masterContract.sendDeploy(provider.sender(), toNano('0.1'));
 
-    // run methods on `jettonMinter`
+    await provider.waitForDeploy(masterContract.address);
+
+    // run methods on `masterContract`
 }
