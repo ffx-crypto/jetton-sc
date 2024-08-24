@@ -47,13 +47,13 @@ describe('JettonMinter', () => {
             success: true,
         });
     });
-    
+
     it('should get jetton data after contract has been deployed', async () => {
         // the check is done inside beforeEach
         // blockchain and masterContract are ready to use
         const jetton_data = await jettonMinter.getJettonData();
-        expect(jetton_data).toHaveProperty("totalSupply", 0n);
-        expect(jetton_data).toHaveProperty("mintable", true);
+        expect(jetton_data).toHaveProperty('totalSupply', 0n);
+        expect(jetton_data).toHaveProperty('mintable', true);
         expect(jetton_data.adminAddress).toEqualAddress(deployer.address);
         expect(jetton_data.content).toEqualCell(masterContractContent);
         // parseJettonContent(jetton_data.content);
@@ -100,7 +100,7 @@ describe('JettonMinter', () => {
         // console.log('mintResult ', mintResult.transactions);
         const newTotalSupply = await jettonMinter.getTotalSupply();
         expect(newTotalSupply).toBe(initialTotalSupply + jettonsAmountToMint);
-        // ANOTHER MINT 
+        // ANOTHER MINT
         const maxPossibleJettonAmount = 4288n - newTotalSupply;
         const secondMintResult = await jettonMinter.sendMint(
             deployer.getSender(),
@@ -114,8 +114,8 @@ describe('JettonMinter', () => {
             to: JWalletAddress,
             deploy: false,
             value: total_ton_amount,
-            success: true
-        })
+            success: true,
+        });
         // ADDITIONAL MINT ATTEMPT
         const additionalMintAttempt = await jettonMinter.sendMint(
             deployer.getSender(),
@@ -141,37 +141,69 @@ describe('JettonMinter', () => {
             288n, // jetton amount
             toNano('0.01'), // forward ton amount
             toNano('0.04'),
-        )
+        );
         const minterData = await jettonMinter.getJettonData();
         expect(minterData.mintable).toBe(true);
         const secondMintResult = await jettonMinter.sendMint(
             deployer.getSender(),
             deployer.address, // to Address
-            (max_prev_supply - 288n), // jetton amount
+            max_prev_supply - 288n, // jetton amount
             toNano('0.01'), // forward ton amount
             toNano('0.04'), // total ton amount
         );
         const newMinterData = await jettonMinter.getJettonData();
         expect(newMinterData.mintable).toBe(false);
-    })
-    
+    });
+
     it('not minter admin should not be able to mint jettons', async () => {
         const non_owner_wallet = await blockchain.treasury('non-owner');
         const jwallet_address = await jettonMinter.getWalletAddress(non_owner_wallet.address);
 
-        const mintResult = await jettonMinter.sendMint(non_owner_wallet.getSender(),
+        const mintResult = await jettonMinter.sendMint(
+            non_owner_wallet.getSender(),
             jwallet_address,
             BigInt(499),
             toNano('0.01'),
-            toNano('0.04')
-         );
+            toNano('0.04'),
+        );
 
         expect(mintResult.transactions).toHaveTransaction({
             from: non_owner_wallet.address,
             to: jettonMinter.address,
             success: false,
-            exitCode: 73
+            exitCode: 73,
+        });
+    });
+
+    it('should not allow to operate contract after admin been changed to zero-address ', async () => {
+        const zero_address = Address.parse('0:0000000000000000000000000000000000000000000000000000000000000000');
+        const result = await jettonMinter.sendChangeAdmin(deployer.getSender(), zero_address);
+        expect(result.transactions).toHaveTransaction({
+            op: 3,
+            success: true,
+        });
+        const new_minter_admin = await jettonMinter.getAdminAddress();
+        expect(new_minter_admin).toEqualAddress(zero_address);
+        const new_owner = await blockchain.treasury('new_owner');
+        const res = await jettonMinter.sendChangeAdmin(deployer.getSender(), new_owner.address);
+        expect(res.transactions).toHaveTransaction({
+            op: 3,
+            success: false,
+        });
+        const jwallet_address = await jettonMinter.getWalletAddress(deployer.address);
+
+        const mint_res = await jettonMinter.sendMint(
+            deployer.getSender(),
+            jwallet_address,
+            BigInt(499),
+            toNano('0.01'),
+            toNano('0.04'),
+        );
+        expect(mint_res.transactions).toHaveTransaction({
+            from: deployer.address,
+            to: jettonMinter.address,
+            op: 21,
+            success: false 
         })
-    })
-    
+    });
 });
