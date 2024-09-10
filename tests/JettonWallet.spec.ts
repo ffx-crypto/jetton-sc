@@ -304,7 +304,7 @@ describe('JettonWallet', () => {
                      forward_payload:(Either Cell ^Cell)
                      = InternalMsgBody;
 */
-        await deployer.send({value: toNano('1'), bounce: false, to: nonDeployer.address});
+        // await deployer.send({value: toNano('1'), bounce: false, to: nonDeployer.address});
         let internalTransfer = beginCell().storeUint(0x178d4519, 32).storeUint(0, 64) //default queryId
                               .storeCoins(toNano('0.01'))
                               .storeAddress(deployer.address)

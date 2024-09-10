@@ -1,0 +1,49 @@
+;; jetton sales contract 
+#include "imports/stdlib.fc";
+
+int min_tons_for_storage() asm "10000000 PUSHINT"; ;; 0.01 TON
+
+int jetton_price() asm "10000000 PUSHINT"; ;; 0.01 TON
+{-
+  Storage
+  storage#_ balance:Coins owner_address:MsgAddressInt jetton_master_address:MsgAddressInt jetton_wallet_code:^Cell = Storage;
+-}
+
+(slice, slice) load_data() inline {
+  slice ds = get_data().begin_parse();
+  return (
+      ds~load_msg_addr(), ;; owner address
+      ds~load_msg_addr() ;; minter address
+  );
+}
+
+() save_data (slice owner_address, slice jetton_master_address) impure inline {
+ set_data(begin_cell()
+            .store_slice(owner_address)
+            .store_slice(jetton_master_address)
+            .end_cell()
+          );
+}
+
+() recv_internal(int msg_value, cell in_msg_full, slice in_msg_body) impure {
+    if (in_msg_body.slice_empty?()) { ;; ignore empty messages
+        return ();
+    }
+    slice cs = in_msg_full.begin_parse();
+    int flags = cs~load_uint(4);
+
+    if (flags & 1) { ;; ignore all bounced messages
+        return ();
+    }
+
+
+}
+
+(slice, slice) get_sales_data() method_id {
+  ~strdump("get_sales_data");
+  (slice addr1, slice addr2) = load_data();
+  ;; ~dump(slice_bits(addr1));
+  ;; ~dump(slice_bits(addr2));
+  return load_data();
+ 
+}
