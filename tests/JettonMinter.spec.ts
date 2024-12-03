@@ -36,8 +36,6 @@ describe('JettonMinter', () => {
             ),
         );
 
-        deployer = await blockchain.treasury('deployer');
-
         const deployResult = await jettonMinter.sendDeploy(deployer.getSender(), toNano('0.05'));
 
         expect(deployResult.transactions).toHaveTransaction({
@@ -131,7 +129,7 @@ describe('JettonMinter', () => {
             exitCode: 101,
         });
     });
-    it('mintable status changes when max_prev_supply is achived', async () => {
+    it('mintable status changes when max_prev_supply is achieved', async () => {
         const max_prev_supply = 4288n;
         const contractData = await jettonMinter.getJettonData();
         expect(contractData.mintable).toBe(true);
