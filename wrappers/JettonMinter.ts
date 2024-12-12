@@ -51,7 +51,6 @@ export class JettonMinter implements Contract {
         const init = { code, data };
         return new JettonMinter(contractAddress(workchain, init), init);
     }
-
     async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
         await provider.internal(via, {
             value,
@@ -84,6 +83,7 @@ export class JettonMinter implements Contract {
             value: total_ton_amount + toNano('0.1'),
         });
     }
+
     static changeAdminMessage(newOwner: Address) {
         return beginCell()
             .storeUint(3, 32)
@@ -91,7 +91,6 @@ export class JettonMinter implements Contract {
             .storeAddress(newOwner)
             .endCell();
     }
-
     async sendChangeAdmin(provider: ContractProvider, via: Sender, newOwner: Address) {
         await provider.internal(via, {
             sendMode: SendMode.PAY_GAS_SEPARATELY,
@@ -99,6 +98,22 @@ export class JettonMinter implements Contract {
             value: toNano('0.1'),
         });
     }
+
+    static withdrawMessage(amount: bigint) {
+        return beginCell()
+            .storeUint(0x3aa870a6, 32)
+            .storeUint(0, 64)
+            .storeCoins(amount)
+            .endCell()
+    }
+    async sendWithdrawFunds(provider: ContractProvider, via: Sender, amount: bigint) {
+        await provider.internal(via, {
+            sendMode: SendMode.PAY_GAS_SEPARATELY,
+            body: JettonMinter.withdrawMessage(amount),
+            value: toNano('0.01')
+        })
+    }
+
     // GETTERS
     async getWalletAddress(provider: ContractProvider, owner: Address): Promise<Address> {
         const res = await provider.get('get_wallet_address', [

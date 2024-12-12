@@ -6,6 +6,7 @@
 #include "imports/jetton-utils.fc";
 
 const const::max_prev_supply = 4288;
+const const::min_tons_for_storage = 10000000; ;; 0.01 TON
 const int error::discovery_fee_not_matched = 75;
 const int error::unauthorized_mint_request = 73;
 
@@ -107,6 +108,28 @@ const int error::unauthorized_mint_request = 73;
         slice new_admin_address = in_msg_body~load_msg_addr();
         save_data(total_supply, new_admin_address, content, jetton_wallet_code);
         return ();
+    }
+
+    if (op == op::withdraw()) {
+      throw_unless(73, equal_slices(sender_address, admin_address));
+      int withdraw_amount = in_msg_body~load_coins();
+      var [balance, _] = get_balance();
+      throw_unless(104, balance >= withdraw_amount);
+
+      int return_value = min(withdraw_amount, balance - const::min_tons_for_storage);
+
+      int msg_mode = 1; ;; 0 (Ordinary message) + 1 (Pay transfer fees separately from the message value)
+
+      var msg = begin_cell()
+              .store_uint(0x18, 6)
+              .store_slice(sender_address)
+              .store_coins(return_value)
+              .store_uint(0, 1 + 4 + 4 + 64 + 32 + 1 + 1);
+
+      send_raw_message(msg.end_cell(), msg_mode);
+
+      return();
+
     }
 
     ;; if (op == 4) { ;; change content, delete this for immutable tokens
