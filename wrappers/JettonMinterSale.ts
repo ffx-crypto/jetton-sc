@@ -10,24 +10,24 @@ import {
     toNano,
 } from '@ton/core';
 
-export type JettonMinterConfig = {
+export type JettonMinterSaleConfig = {
     admin: Address;
     content: Cell;
     jwallet_code: Cell;
 };
-export type JettonMinterContent = {
+export type JettonMinterSaleContent = {
     type: 0 | 1;
     uri: string;
 };
 
-export function jettonContentToCell(content: JettonMinterContent) {
+export function jettonContentToCell(content: JettonMinterSaleContent) {
     return beginCell()
         .storeUint(content.type, 8)
         .storeStringTail(content.uri) //Snake logic under the hood
         .endCell();
 }
 
-export function jettonMinterConfigToCell(config: JettonMinterConfig): Cell {
+export function JettonMinterSaleConfigToCell(config: JettonMinterSaleConfig): Cell {
     return beginCell()
         .storeCoins(0)
         .storeAddress(config.admin)
@@ -36,20 +36,20 @@ export function jettonMinterConfigToCell(config: JettonMinterConfig): Cell {
         .endCell();
 }
 
-export class JettonMinter implements Contract {
+export class JettonMinterSale implements Contract {
     constructor(
         readonly address: Address,
         readonly init?: { code: Cell; data: Cell },
     ) {}
 
     static createFromAddress(address: Address) {
-        return new JettonMinter(address);
+        return new JettonMinterSale(address);
     }
 
-    static createFromConfig(config: JettonMinterConfig, code: Cell, workchain = 0) {
-        const data = jettonMinterConfigToCell(config);
+    public static createFromConfig(config: JettonMinterSaleConfig, code: Cell, workchain = 0) {
+        const data = JettonMinterSaleConfigToCell(config);
         const init = { code, data };
-        return new JettonMinter(contractAddress(workchain, init), init);
+        return new JettonMinterSale(contractAddress(workchain, init), init);
     }
     async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
         await provider.internal(via, {
@@ -79,7 +79,7 @@ export class JettonMinter implements Contract {
     ) {
         await provider.internal(via, {
             sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: JettonMinter.mintMessage(to, jetton_amount, forward_ton_amount, total_ton_amount),
+            body: JettonMinterSale.mintMessage(to, jetton_amount, forward_ton_amount, total_ton_amount),
             value: total_ton_amount + toNano('0.1'),
         });
     }
@@ -101,7 +101,7 @@ export class JettonMinter implements Contract {
     ) {
         await provider.internal(via, {
             sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: JettonMinter.buyMessage(forward_ton_amount, total_ton_amount),
+            body: JettonMinterSale.buyMessage(forward_ton_amount, total_ton_amount),
             value: total_ton_amount + toNano('0.1'),
         });
     }
@@ -116,7 +116,7 @@ export class JettonMinter implements Contract {
     async sendChangeAdmin(provider: ContractProvider, via: Sender, newOwner: Address) {
         await provider.internal(via, {
             sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: JettonMinter.changeAdminMessage(newOwner),
+            body: JettonMinterSale.changeAdminMessage(newOwner),
             value: toNano('0.1'),
         });
     }
@@ -131,7 +131,21 @@ export class JettonMinter implements Contract {
     async sendWithdrawFunds(provider: ContractProvider, via: Sender, amount: bigint) {
         await provider.internal(via, {
             sendMode: SendMode.PAY_GAS_SEPARATELY,
-            body: JettonMinter.withdrawMessage(amount),
+            body: JettonMinterSale.withdrawMessage(amount),
+            value: toNano('0.01')
+        })
+    }
+
+    static destroyMessage() {
+        return beginCell()
+        .storeUint(0x595f07bc, 32) // op::destroy()
+        .storeUint(0, 64) 
+        .endCell()
+    }
+    async sendDestroy(provider: ContractProvider, via: Sender) {
+        await provider.internal(via, {
+            sendMode: SendMode.PAY_GAS_SEPARATELY,
+            body: JettonMinterSale.destroyMessage(),
             value: toNano('0.01')
         })
     }

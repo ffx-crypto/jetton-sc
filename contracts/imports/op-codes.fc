@@ -8,3 +8,6 @@ int op::burn_notification() asm "0x7bdd97de PUSHINT";
 ;; Minter
 int op::mint() asm "21 PUSHINT";
 int op::withdraw() asm "0x3aa870a6 PUSHINT";
+int op::buy() asm "0xea06185d PUSHINT";
+int op::upgrade() asm "0x2508d66a PUSHINT";
+int op::destroy() asm "0x595f07bc PUSHINT";
