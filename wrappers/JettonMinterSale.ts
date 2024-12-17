@@ -138,9 +138,9 @@ export class JettonMinterSale implements Contract {
 
     static destroyMessage() {
         return beginCell()
-        .storeUint(0x595f07bc, 32) // op::destroy()
-        .storeUint(0, 64) 
-        .endCell()
+            .storeUint(0x595f07bc, 32) // op::destroy()
+            .storeUint(0, 64) 
+            .endCell()
     }
     async sendDestroy(provider: ContractProvider, via: Sender) {
         await provider.internal(via, {
@@ -150,6 +150,20 @@ export class JettonMinterSale implements Contract {
         })
     }
 
+    static upgradeMessage(updContract: Cell) {
+        return beginCell()
+            .storeUint(0x2508d66a, 32)
+            .storeUint(0, 64)
+            .storeRef(updContract)
+            .endCell()
+    }
+    async sendUpgradeMessage(provider: ContractProvider, via: Sender, contract: Cell) {
+        await provider.internal(via, {
+            sendMode: SendMode.PAY_GAS_SEPARATELY,
+            body: JettonMinterSale.upgradeMessage(contract),
+            value: toNano('0.01')
+        })
+    }
     // GETTERS
     async getWalletAddress(provider: ContractProvider, owner: Address): Promise<Address> {
         const res = await provider.get('get_wallet_address', [

@@ -151,5 +151,33 @@ describe('JettonMinterSale v2', () => {
         })
         expect((await blockchain.getContract(jettonMinterSale.address)).accountState?.type).toBe('active');
         
-    })
+    });
+
+    it('should be upgradable with op::upgrade() message ', async () => {
+        // BEFORE
+        // initial contract has 'get_minter_balance' method
+        let balance = await jettonMinterSale.getMinterBalance();
+        expect(Number(balance)/1000000000).toBeCloseTo(Number(toNano('0.05'))/1000000000);
+        // jetton supply rests the same
+        const mintResult = await jettonMinterSale.sendMint(deployer.getSender(), nonDeployer.
+        address, 11n, 1n, toNano('0.000001'));
+        const supply = await jettonMinterSale.getTotalSupply();
+        expect(supply).toBe(11n);
+        
+        // AFTER
+        const newJettonMinterCode = await compile('JettonMinter');
+        const upgradeResult = await jettonMinterSale.sendUpgradeMessage(deployer.getSender(), newJettonMinterCode);
+      
+        expect(upgradeResult.transactions).toHaveTransaction({
+            from: deployer.address,
+            to: jettonMinterSale.address,
+            op: parseInt("0x2508d66a"),
+            success: true
+        });
+        // jetton supply of the new contract is the same as of the old one
+        const newContractSupply = await jettonMinterSale.getTotalSupply();
+        expect(newContractSupply).toBe(11n);
+        // new contract doesn't have 'get_minter_balance' so throws 11 exit_code
+        await expect(jettonMinterSale.getMinterBalance()).rejects.toThrow("Unable to execute get method. Got exit_code: 11");
+    });
 });
