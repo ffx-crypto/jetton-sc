@@ -132,7 +132,7 @@ export class JettonMinterSale implements Contract {
         await provider.internal(via, {
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: JettonMinterSale.withdrawMessage(amount),
-            value: toNano('0.01')
+            value: toNano('0.002')
         })
     }
 
