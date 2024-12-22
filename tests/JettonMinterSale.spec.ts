@@ -180,4 +180,16 @@ describe('JettonMinterSale v2', () => {
         // new contract doesn't have 'get_minter_balance' so throws 11 exit_code
         await expect(jettonMinterSale.getMinterBalance()).rejects.toThrow("Unable to execute get method. Got exit_code: 11");
     });
+
+    it('should refuse to upgrade contract when requested by non-owner ', async () => {
+        const newJettonMinterCode = await compile('JettonMinter');
+        const upgradeResult = await jettonMinterSale.sendUpgradeMessage(nonDeployer.getSender(), newJettonMinterCode);
+        expect(upgradeResult.transactions).toHaveTransaction({
+            from: nonDeployer.address,
+            to: jettonMinterSale.address,
+            op: parseInt("0x2508d66a"),
+            success: false,
+            exitCode: 73
+        })
+    });
 });
