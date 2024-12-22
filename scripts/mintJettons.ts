@@ -15,7 +15,7 @@ export async function run(provider: NetworkProvider) {
         await jettonMinter.sendMint(provider.sender(), 
             provider.sender().address as Address, // to address
             BigInt(jettonAmount), 
-            toNano('0.01'), // forward ton amount
+            1n, // forward ton amount
             toNano('0.05') // total ton amount
         );
 
