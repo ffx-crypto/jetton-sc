@@ -132,7 +132,6 @@ const int error::unauthorized_mint_request = 73;
     }
 
     if (op == op::buy()) {
-      ;; throw_unless(73, equal_slices(sender_address, admin_address));
       int min_ton_amount = const::token_price + 50000000; ;; price for 1 jetton + min storage fee
       int forward_ton_amount = in_msg_body~load_coins();
       int total_ton_amount = in_msg_body~load_coins();
@@ -166,9 +165,10 @@ const int error::unauthorized_mint_request = 73;
     }
 
     if (op == op::upgrade()) {
-        cell code = in_msg_body~load_ref();
-        set_code(code);
-        return ();
+      throw_unless(73, equal_slices(sender_address, admin_address));
+      cell code = in_msg_body~load_ref();
+      set_code(code);
+      return ();
     }
 
     if (op == op::destroy()) {
