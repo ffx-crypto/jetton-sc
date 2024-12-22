@@ -190,8 +190,7 @@ const int error::unauthorized_mint_request = 73;
 
 (int, int, slice, cell, cell) get_jetton_data() method_id {
     (int total_supply, slice admin_address, cell content, cell jetton_wallet_code) = load_data();
-    var mintable = total_supply < const::max_prev_supply;    
-    return (total_supply, mintable, admin_address, content, jetton_wallet_code);
+    return (total_supply, -1, admin_address, content, jetton_wallet_code);
 }
 
 slice get_wallet_address(slice owner_address) method_id {
