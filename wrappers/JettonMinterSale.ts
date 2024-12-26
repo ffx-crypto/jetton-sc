@@ -102,7 +102,7 @@ export class JettonMinterSale implements Contract {
         await provider.internal(via, {
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: JettonMinterSale.buyMessage(forward_ton_amount, total_ton_amount),
-            value: total_ton_amount + toNano('0.1'),
+            value: total_ton_amount + toNano('0.058'),
         });
     }
 

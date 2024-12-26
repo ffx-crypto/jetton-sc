@@ -31,11 +31,6 @@ slice calculate_user_jetton_wallet_address(slice owner_address, slice jetton_mas
 
 (int) math::div (int x, int y) asm "DIV";
 
-int calculate_jetton_amount(int ton_amount, int j_price) {
-  int tons_for_jettons = ton_amount - 50000000; ;; - 0.05 TON storage fees
-  ~strdump("tons_for_jettons");
-  ~dump(tons_for_jettons);
-  ;; int x = math::div(5,2);
-  ;; ~dump(x);
-  return math::div(tons_for_jettons, j_price); 
+int calculate_jetton_amount(int tons_to_swap, int j_price) {
+  return math::div(tons_to_swap, j_price); 
 }
