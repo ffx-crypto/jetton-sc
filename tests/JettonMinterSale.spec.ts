@@ -1,9 +1,19 @@
 import { Blockchain, SandboxContract, TreasuryContract } from '@ton/sandbox';
-import { Address, beginCell, Cell, SendMode, toNano } from '@ton/core';
+import { beginCell, Cell, SendMode, toNano } from '@ton/core';
 import { JettonMinterSale } from '../wrappers/JettonMinterSale';
 import { JettonWallet } from '../wrappers/JettonWallet';
 import '@ton/test-utils';
 import { compile } from '@ton/blueprint';
+
+/*
+ADD FOLLOWING LINES TO jetton-minter-sale.fc BEFORE RUNNING TESTS: 
+
+(int) get_minter_balance() method_id {
+  var [balance, _] = get_balance();
+  return balance;
+}
+
+*/
 
 describe('JettonMinterSale v2', () => {
     let minterCode: Cell;
@@ -47,6 +57,7 @@ describe('JettonMinterSale v2', () => {
             success: true,
         });
     });
+    
     it('should deposit tons when empty message body ', async () => {
         const result = await nonDeployer.send({
             to: jettonMinterSale.address,
@@ -91,36 +102,46 @@ describe('JettonMinterSale v2', () => {
         })
     });
 
-    it('should mint jettons and send to the seller when recieve op::buy message ', async () => {
-        const buyResult = await jettonMinterSale.sendBuy(nonDeployer.getSender(), toNano('0.00001'), toNano('0.5'));
+    it('should mint jettons and send to the buyer when recieve op::buy message ', async () => {
+        const tonsToChangeForJettons = 90n;
+        const storageFee = toNano('0.05');
+        const jettonPrice = 1n; // TODO add price in .env
+        const expectedJettonAmount = tonsToChangeForJettons / jettonPrice;
+        const initialBalance = await jettonMinterSale.getMinterBalance();
+        const buyResult = await jettonMinterSale.sendBuy(nonDeployer.getSender(), 1n, tonsToChangeForJettons);
+        const JWalletAddress = await jettonMinterSale.getJettonWalletAddress(nonDeployer.address);
+        // console.log('JettonMinterSale.address ', jettonMinterSale.address.toString());
+        // console.log('deployer.address ', deployer.address.toString());
+        // console.log('nonDeployer.address ', nonDeployer.address.toString());
         expect(buyResult.transactions).toHaveTransaction({
             from: jettonMinterSale.address,
+            to: JWalletAddress,
             success: true,
-            deploy: true
+            deploy: true,
+            value: storageFee
         });
-        const JWalletAddress = await jettonMinterSale.getJettonWalletAddress(nonDeployer.address);
+        const balanceAfterBuy = await jettonMinterSale.getMinterBalance();
+        // minter balance should have increased by the amount of tons sent for exchange with jettons
+        expect(Number(balanceAfterBuy)/1000000000).toBeCloseTo(Number(initialBalance + tonsToChangeForJettons)/1000000000);
+        // jetton Wallet balance is equal to `expectedJettonAmount`
         nonDeployerJettonWallet = await blockchain.openContract(JettonWallet.createFromAddress(JWalletAddress));
         const jettonBalance = await nonDeployerJettonWallet.getJettonBalance();
-        expect(jettonBalance).toBe(90n)
+        expect(jettonBalance).toBe(expectedJettonAmount)
     });
 
     it('should throw error when sent not enough tons with op::buy message ', async () => {
-        const tokenPrice = toNano('0.005');
+        const tokenPrice = 1n; //toNano('0.005');
         const storageFee = toNano('0.05');
-        const totalTonAmount = tokenPrice + storageFee - toNano('0.002');
+        const totalTonAmount = 0n;
         const buyResult = await jettonMinterSale.sendBuy(
             nonDeployer.getSender(),
             toNano('0.000000001'), // forward ton amount
             totalTonAmount
          );
-         console.log('JettonMinterSale.address ', jettonMinterSale.address.toString());
-        console.log('deployer.address ', deployer.address.toString());
-        console.log('nonDeployer.address ', nonDeployer.address.toString());
         expect(buyResult.transactions).toHaveTransaction({
             to: jettonMinterSale.address,
             from: nonDeployer.address,
             op: parseInt("0xea06185d"), // op::buy()
-            // deploy: true,
             success: false,
             exitCode: 76
         })
@@ -136,9 +157,6 @@ describe('JettonMinterSale v2', () => {
             success: true
         })
         expect((await blockchain.getContract(jettonMinterSale.address)).accountState?.type).toBe(undefined);
-        // const getterResult = await jettonMinterSale.getMinterBalance();
-        // expect(getterResult).toEqual(0n);
-        // const jettonMinterData = await jettonMinterSale.get
     });
 
     it('should reject op::destroy() message from not-owner ', async () => {
@@ -192,4 +210,5 @@ describe('JettonMinterSale v2', () => {
             exitCode: 73
         })
     });
+    
 });
