@@ -1,7 +1,7 @@
 {
-  "name": "Flying Fox token",
-  "description": "FLYING FOX IS NOT BAT",
-  "symbol": "FFXT",
-  "decimals": 0,
-  "image": "https://gateway.pinata.cloud/ipfs/QmXLLGXja57hEsFa9D2L6bFTq8ZLbkAvpGqhj8bgxKaLZH"
+  "name": "Flying Fox Coin",
+  "description": "Megabats are mega cute!",
+  "symbol": "FFXC",
+  "decimals": 9,
+  "image": "https://raw.githubusercontent.com/ffx-crypto/jetton-sc/refs/heads/master/ffxc-logo.png"
 }
