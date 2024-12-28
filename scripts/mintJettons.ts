@@ -15,13 +15,13 @@ export async function run(provider: NetworkProvider) {
     }
     
     const jettonMinter = provider.open(JettonMinter.createFromAddress(address(minterAddress)));
-
-        await jettonMinter.sendMint(provider.sender(), 
-            provider.sender().address as Address, // to address
-            toNano(jettonAmount), 
-            1n, // forward ton amount
-            toNano('0.05') // total ton amount
-        );
+    // mint fees = 0.006957432
+    await jettonMinter.sendMint(provider.sender(), 
+        provider.sender().address as Address, // to address
+        toNano(jettonAmount), 
+        1n, // forward ton amount
+        toNano('0.05') // total ton amount
+    );
 
     ui.write('Minted successfully!');
 }

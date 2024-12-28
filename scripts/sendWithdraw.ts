@@ -8,11 +8,11 @@ export async function run(provider: NetworkProvider) {
     const ui = provider.ui();
 
     const minterAddress = await ui.input('Provide Minter address');
-    const jettonAmount = await ui.input('Provide withdraw amount');
+    const jettonAmount = await ui.input('Provide withdraw amount in nanotons');
     const tons = parseInt(jettonAmount);
     const jettonMinter = provider.open(JettonMinterSale.createFromAddress(address(minterAddress)));
     if (typeof tons === 'number') {
-
+        // withdraw fees = 0.007112 for admin, 0.0002096 for minter
         await jettonMinter.sendWithdrawFunds(provider.sender(), BigInt(tons));
     } else {
         ui.write('Provided withdraw amount is not a number!');
