@@ -5,7 +5,6 @@
 #include "imports/op-codes.fc";
 #include "imports/jetton-utils.fc";
 
-const const::max_prev_supply = 4288;
 const const::token_price = 1; ;; 1 NanoTON
 const const::token_storage_fee = 50000000; ;; 0.05 TON
 const const::mint_fee = 8000000; ;; 0.008 TON
@@ -69,7 +68,6 @@ const int error::unauthorized_mint_request = 73;
       int jetton_amount = in_msg_body~load_coins();
       int forward_ton_amount = in_msg_body~load_coins();
       int total_ton_amount = in_msg_body~load_coins();
-      throw_unless(101, total_supply + jetton_amount <= const::max_prev_supply);
       throw_unless(75, total_ton_amount > forward_ton_amount);
       cell mint_request = begin_cell()
               .store_uint(0x178d4519, 32)
