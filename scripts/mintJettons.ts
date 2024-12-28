@@ -1,20 +1,24 @@
 import { Address, address, toNano } from '@ton/core';
 import { JettonMinter } from '../wrappers/JettonMinter';
-import { NetworkProvider, sleep } from '@ton/blueprint';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import { NetworkProvider } from '@ton/blueprint';
+
 
 export async function run(provider: NetworkProvider) {
     const ui = provider.ui();
 
     const minterAddress = await ui.input('Provide Minter address');
-    const jettonAmount = parseInt(process.env.JETTON_SUPPLY!); // max 4288
+    const jettonAmountStr = await ui.input('Provide amount of jettons to mint');
+    const jettonAmount = Number(jettonAmountStr);
 
+    if (isNaN(jettonAmount)) {
+        throw new Error('Invalid input: entered value is not a number');
+    }
+    
     const jettonMinter = provider.open(JettonMinter.createFromAddress(address(minterAddress)));
 
         await jettonMinter.sendMint(provider.sender(), 
             provider.sender().address as Address, // to address
-            BigInt(jettonAmount), 
+            toNano(jettonAmount), 
             1n, // forward ton amount
             toNano('0.05') // total ton amount
         );

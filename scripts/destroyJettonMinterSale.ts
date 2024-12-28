@@ -10,7 +10,7 @@ export async function run(provider: NetworkProvider) {
 
     const minterAddress = await ui.input('Provide Minter address');
     const jettonMinter = provider.open(JettonMinterSale.createFromAddress(address(minterAddress)));
-
+    // operation fees = 0.00498
     await jettonMinter.sendDestroy(provider.sender());
 
     ui.write('Successfully closed minter contract.');
