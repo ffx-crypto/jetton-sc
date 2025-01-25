@@ -210,5 +210,12 @@ describe('JettonMinterSale v2', () => {
             exitCode: 73
         })
     });
+
+    it('minter admin should be able to change content ', async () => {
+        const newContent = beginCell().storeUint(1,1).endCell();
+        expect((await jettonMinterSale.getContent()).equals(masterContractContent));
+        await jettonMinterSale.sendChangeContentMessage(deployer.getSender(), newContent);
+        expect((await jettonMinterSale.getContent()).equals(newContent));
+    })
     
 });

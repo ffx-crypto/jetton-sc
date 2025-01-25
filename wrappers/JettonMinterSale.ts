@@ -20,7 +20,7 @@ export type JettonMinterSaleContent = {
     uri: string;
 };
 
-export function jettonContentToCell(content: JettonMinterSaleContent) {
+export function jettonContentToCell(content: JettonMinterSaleContent): Cell {
     return beginCell()
         .storeUint(content.type, 8)
         .storeStringTail(content.uri) //Snake logic under the hood
@@ -164,6 +164,22 @@ export class JettonMinterSale implements Contract {
             value: toNano('0.01')
         })
     }
+
+    static changeContentMessage(newContent: Cell) {
+        return beginCell()
+            .storeUint(4, 32)
+            .storeUint(0, 64)
+            .storeRef(newContent)
+            .endCell();
+    }
+    async sendChangeContentMessage(provider: ContractProvider, via: Sender, content: Cell) {
+        await provider.internal(via, {
+            sendMode: SendMode.PAY_GAS_SEPARATELY,
+            body: JettonMinterSale.changeContentMessage(content),
+            value: toNano('0.01')
+        })
+    }
+
     // GETTERS
     async getWalletAddress(provider: ContractProvider, owner: Address): Promise<Address> {
         const res = await provider.get('get_wallet_address', [
